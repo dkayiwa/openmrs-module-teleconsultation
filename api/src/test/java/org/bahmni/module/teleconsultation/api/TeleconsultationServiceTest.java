@@ -1,14 +1,12 @@
 package org.bahmni.module.teleconsultation.api;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openmrs.api.APIAuthenticationException;
 import org.openmrs.api.context.Context;
 import org.openmrs.web.test.jupiter.BaseModuleWebContextSensitiveTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 
-import java.sql.SQLException;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,16 +21,8 @@ public class TeleconsultationServiceTest extends BaseModuleWebContextSensitiveTe
 	TeleconsultationService teleconsultationService;
 
 	@BeforeEach
-	public void init() throws SQLException {
+	public void init() {
 		executeDataSet("userRolesAndPrivileges.xml");
-		// RolePrivilegeCache loads roles on a daemon thread with its own session, which can't see this
-		// test's uncommitted rows, so commit them (tearDown deletes them again).
-		getConnection().commit();
-	}
-
-	@AfterEach
-	public void tearDown() {
-		deleteAllData();
 	}
 
 	@Test
@@ -47,6 +37,6 @@ public class TeleconsultationServiceTest extends BaseModuleWebContextSensitiveTe
 	public void shouldThrowAuthenticationExceptionIfUserDoesNotHaveSufficientPrivileges() {
 		Context.authenticate("userWithoutPrivilege", "P@ssw0rd");
 		TeleconsultationService service = Context.getService(TeleconsultationService.class);
-		assertThrows(APIAuthenticationException.class, () -> service.generateTeleconsultationLink("uuid"));
+		assertThrows(AccessDeniedException.class, () -> service.generateTeleconsultationLink("uuid"));
 	}
 }
